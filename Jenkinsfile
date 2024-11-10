@@ -1,39 +1,28 @@
-pipeline {
-    agent { label "dev-server"}
-    
-    stages {
-        
-        stage("code"){
+pipeline{
+    agent any;
+    stages{
+        stage("Code"){
             steps{
-                git url: "https://github.com/LondheShubham153/node-todo-cicd.git", branch: "master"
-                echo 'bhaiyya code clone ho gaya'
+               git url:"https://github.com/cvinods555/node-todo-cicd.git", branch:"master" 
             }
         }
-        stage("build and test"){
+        stage("Build"){
             steps{
-                sh "docker build -t node-app-test-new ."
-                echo 'code build bhi ho gaya'
+               sh "docker build -t node-app1 ." 
             }
         }
-        stage("scan image"){
+        stage("Push to DockerHub"){
             steps{
-                echo 'image scanning ho gayi'
-            }
-        }
-        stage("push"){
-            steps{
-                withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker tag node-app-test-new:latest ${env.dockerHubUser}/node-app-test-new:latest"
-                sh "docker push ${env.dockerHubUser}/node-app-test-new:latest"
-                echo 'image push ho gaya'
+                withCredentials([usernamePassword(credentialsId: 'dockerHubCred', passwordVariable: 'dockerPass', usernameVariable: 'dockerUser')]) {
+                    sh "docker login -u ${env.dockerUser} -p ${env.dockerPass}"
+                    sh "docker image tag node-app1:latest ${env.dockerUser}/node-app1:latest"
+                    sh "docker push ${env.dockerUser}/node-app1:latest"
                 }
             }
         }
-        stage("deploy"){
+        stage("Deploy"){
             steps{
-                sh "docker-compose down && docker-compose up -d"
-                echo 'deployment ho gayi'
+                sh "docker compose down && docker compose up -d"
             }
         }
     }
